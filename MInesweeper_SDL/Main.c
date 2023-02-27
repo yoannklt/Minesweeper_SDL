@@ -8,6 +8,9 @@
 
 int main(int argc, char** argv)
 {
+	SDL_Texture* texture = NULL;
+	SDL_Surface* surface = NULL;
+	SDL_Rect rectangle;
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		SDL_ExitWithError("Initialisation SDL");
