@@ -52,10 +52,11 @@ int main(int argc, char** argv)
 		}
 
 		//UPDATE
-
+		bombPlacing(tableau, 5, 5);
 
 		//DISPLAY
 		displayGrid(tableau, window, renderer);
+
 	}
 	
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
@@ -113,6 +114,9 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 				else
 					Tile = SDL_LoadBMP("img/herbe2.bmp");
 				break;
+
+			case BOMB_CELL:
+				Tile = SDL_LoadBMP("img/Aubergine-Gauche.bmp");
 			}
 			//------------------------------------//
 			if (Tile == NULL)
