@@ -34,6 +34,8 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
+	//bombPlacing(tableau, 5, 5);
+
 	while (program_launched)
 	{
 		//EVENT
@@ -47,12 +49,12 @@ int main(int argc, char** argv)
 				break;
 
 			default:
+				
 				break;
 			}
 		}
 
 		//UPDATE
-		bombPlacing(tableau, 5, 5);
 
 		//DISPLAY
 		displayGrid(tableau, window, renderer);
@@ -99,6 +101,7 @@ void SDL_ExitWithError(const char* message)
 
 void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
 {
+	SDL_RenderClear(renderer);
 	SDL_Texture* texture = NULL;
 	SDL_Surface* Tile = NULL;
 	SDL_Rect rectangle;
@@ -109,14 +112,11 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 			Tile = NULL;
 			switch (tableau[i][j]) {
 			case HIDDEN_CELL:
-				if ((i+j) % 2 == 0 )
+				if ((i + j) % 2 == 0) 
 					Tile = SDL_LoadBMP("img/herbe1.bmp");
-				else
-					Tile = SDL_LoadBMP("img/herbe2.bmp");
+				else  
+					Tile = SDL_LoadBMP("img/herbe2.bmp"); 
 				break;
-
-			case BOMB_CELL:
-				Tile = SDL_LoadBMP("img/Aubergine-Gauche.bmp");
 			}
 			//------------------------------------//
 			if (Tile == NULL)
