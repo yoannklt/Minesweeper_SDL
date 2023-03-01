@@ -11,6 +11,7 @@
 #define HIDDEN_CELL 0
 #define BOMB_CELL 1
 #define DISCOVERED_CELL 2
+#define FLAG 3
 
 
 int main(int argc, char** argv)
@@ -18,7 +19,7 @@ int main(int argc, char** argv)
 	SDL_Renderer* renderer = NULL;
 	SDL_Window* window = NULL;
 
-	char tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
+	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
 
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -34,7 +35,7 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
-	bombPlacing(tableau, 5, 5);
+	
 	displayGrid(tableau, window, renderer);
 	while (program_launched)
 	{
@@ -45,10 +46,14 @@ int main(int argc, char** argv)
 			switch (event.type)
 			{
 			case SDL_MOUSEBUTTONDOWN:
-				printf("x: %d", (event.button.x - 250) / 50);
-				printf(" | y :%d\n", event.button.y / 50);
-				play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-				displayGrid(tableau, window, renderer);
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
+					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
+
+					}
+					displayGrid(tableau, window, renderer);
+				}
+				
 				break;
 
 			case SDL_QUIT:
@@ -83,7 +88,7 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-void displayGrid(char tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
+void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
 {
 	SDL_RenderClear(renderer);
 	SDL_Texture* texture = NULL;
@@ -116,7 +121,47 @@ void displayGrid(char tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_
 				else
 					Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
 				break;
+
+			case 5:
+				Tile = SDL_LoadBMP("img/egg1.bmp");
+				break;
+
+			case 6:
+				Tile = SDL_LoadBMP("img/egg2.bmp");
+				break;
+
+			case 7:
+				Tile = SDL_LoadBMP("img/egg3.bmp");
+				break;
+
+			case 8:
+				Tile = SDL_LoadBMP("img/egg4.bmp");
+				break;
+
+			case 9:
+				Tile = SDL_LoadBMP("img/egg5.bmp");
+				break;
+
+			case 10:
+				Tile = SDL_LoadBMP("img/egg6.bmp");
+				break;
+
+			case 11:
+				Tile = SDL_LoadBMP("img/egg7.bmp");
+				break;
+
+			case 12:
+				Tile = SDL_LoadBMP("img/egg8.bmp");
+				break;
+
+			case 13:
+				Tile = SDL_LoadBMP("img/Bombe.bmp");
+				break;
+
+			case FLAG:
+				break;
 			default:
+				Tile = SDL_LoadBMP("img/NumberTwo.bmp");
 				break;
 			}
 			//------------------------------------//
@@ -149,42 +194,42 @@ void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 	SDL_Quit();
 }
 
-int play(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
-{
-	tableau[y][x] = DISCOVERED_CELL;
+
+int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+	{
 
 	int bombs = bombsAround(tableau, x, y);
 
-	if (tableau[x][y] == BOMB_CELL) {
+	if (tableau[y][x] == BOMB_CELL) {
 		for (int i = 0; i < GRID_LENGTH; i++) {
 			for (int j = 0; j < GRID_LENGTH; j++) {
 				if (tableau[i][j] == BOMB_CELL)
-					tableau[i][j] = 9;
+					tableau[i][j] = 13;
 			}
 		}
 		return 3;
 	}
-	else
-		tableau[y][x] = DISCOVERED_CELL;
 
-	if (bombs != 0) {
-		tableau[y][x] = DISCOVERED_CELL;
+	if (bombs != 0)
+	{
+		tableau[y][x] = bombs + 4;
 		return 1;
 	}
+
+	tableau[y][x] = DISCOVERED_CELL;
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			if (i - 1 != 0 || j - 1 != 0) {
-				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && tableau[y + j - 1][x + i - 1] == BOMB_CELL) {
-					tableau[i][j] = DISCOVERED_CELL;
-					play(tableau, i, j);
+				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && tableau[y + j - 1][x + i - 1] == HIDDEN_CELL) {
+					play(tableau,x + i - 1,y + j - 1);
 				}
 			}
 		}
 	}
 }
 
-int bombsAround(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+int bombsAround(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
 	int bombsAround = 0;
 
@@ -202,7 +247,7 @@ int bombsAround(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 
 }
 
-int victory(char tableau[GRID_LENGTH][GRID_LENGTH])
+int victory(int tableau[GRID_LENGTH][GRID_LENGTH])
 {
 	for (int i = 0; i < GRID_LENGTH; i++) {
 		for (int j = 0; j < GRID_LENGTH; j++) {
@@ -220,7 +265,7 @@ void Color(int couleurDuTexte, int couleurDeFond)
 	SetConsoleTextAttribute(H, couleurDeFond * 16 + couleurDuTexte);
 }
 
-int bombPlacing(char tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY)
+int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY)
 {
 	srand(time(NULL));
 	const int FREE_CASE_COUNT = (GRID_LENGTH) * (GRID_LENGTH);
@@ -234,7 +279,7 @@ int bombPlacing(char tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int start
 		for (int j = 0; j < 3; j++)
 		{
 			if (startPosX + i - 1 >= 0 && startPosX + i - 1 < GRID_LENGTH && startPosY + j - 1 >= 0 && startPosY < GRID_LENGTH) {
-				removeAt(&freeIndex, (startPosY) * 10 + (j - 1) * 10 + (startPosX)+i - 1);
+				removeAt(&freeIndex, (startPosY) * 10 + (j - 1) * 10 + (startPosX) + i - 1);
 			}
 		}
 	}
