@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	SDL_Renderer* renderer = NULL;
 	SDL_Window* window = NULL;
 
-	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
+	char tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
 
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -34,8 +34,8 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
-	//bombPlacing(tableau, 5, 5);
-
+	bombPlacing(tableau, 5, 5);
+	displayGrid(tableau, window, renderer);
 	while (program_launched)
 	{
 		//EVENT
@@ -44,6 +44,13 @@ int main(int argc, char** argv)
 		{
 			switch (event.type)
 			{
+			case SDL_MOUSEBUTTONDOWN:
+				printf("x: %d", (event.button.x - 250) / 50);
+				printf(" | y :%d\n", event.button.y / 50);
+				play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
+				displayGrid(tableau, window, renderer);
+				break;
+
 			case SDL_QUIT:
 				program_launched = SDL_FALSE;
 				break;
@@ -57,7 +64,7 @@ int main(int argc, char** argv)
 		//UPDATE
 
 		//DISPLAY
-		displayGrid(tableau, window, renderer);
+		
 
 	}
 	
@@ -76,30 +83,7 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-// FONCTION (CREEE MANUELLEMENT) QUI GERE LES EVENEMENTS AU SEIN DE NOTRE FENETRE SDL
-//void SDL_EventHandler(SDL_bool program_launched)
-//{
-//	// CODE MINIMAL
-//	while (program_launched)
-//	{
-//		SDL_Event event;
-//
-//		while (SDL_PollEvent(&event))
-//		{
-//			switch (event.type)
-//			{
-//			case SDL_QUIT:
-//				program_launched = SDL_FALSE;
-//				break;
-//
-//			default:
-//				break;
-//			}
-//		}
-//	}
-//}
-
-void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
+void displayGrid(char tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
 {
 	SDL_RenderClear(renderer);
 	SDL_Texture* texture = NULL;
@@ -110,12 +94,29 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 		rectangle.y = 50 * i;
 		for (int j = 0; j < GRID_LENGTH; j++) {
 			Tile = NULL;
+			//printf("%d", i);
 			switch (tableau[i][j]) {
 			case HIDDEN_CELL:
 				if ((i + j) % 2 == 0) 
 					Tile = SDL_LoadBMP("img/herbe1.bmp");
 				else  
 					Tile = SDL_LoadBMP("img/herbe2.bmp"); 
+				break;
+			
+			case BOMB_CELL:
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/herbe1.bmp");
+				else
+					Tile = SDL_LoadBMP("img/herbe2.bmp");
+				break;
+
+			case DISCOVERED_CELL:
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/herbe-automne1.bmp");
+				else
+					Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
+				break;
+			default:
 				break;
 			}
 			//------------------------------------//
@@ -150,11 +151,11 @@ void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 
 int play(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
-	tableau[x][y] = DISCOVERED_CELL;
+	tableau[y][x] = DISCOVERED_CELL;
 
 	int bombs = bombsAround(tableau, x, y);
 
-	if (tableau[y][x] == BOMB_CELL) {
+	if (tableau[x][y] == BOMB_CELL) {
 		for (int i = 0; i < GRID_LENGTH; i++) {
 			for (int j = 0; j < GRID_LENGTH; j++) {
 				if (tableau[i][j] == BOMB_CELL)
@@ -167,7 +168,7 @@ int play(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 		tableau[y][x] = DISCOVERED_CELL;
 
 	if (bombs != 0) {
-		tableau[x][y] = DISCOVERED_CELL;
+		tableau[y][x] = DISCOVERED_CELL;
 		return 1;
 	}
 
