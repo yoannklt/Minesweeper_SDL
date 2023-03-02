@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -12,6 +13,7 @@
 #define BOMB_CELL 1
 #define DISCOVERED_CELL 2
 #define FLAG 3
+#define FLAG_BOMB 4
 
 
 int main(int argc, char** argv)
@@ -35,7 +37,8 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
-	
+	int nbTours = 0;
+
 	displayGrid(tableau, window, renderer);
 	while (program_launched)
 	{
@@ -47,10 +50,20 @@ int main(int argc, char** argv)
 			{
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
-
+					if (nbTours == 0) {
+						bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
+						play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3;
+						nbTours++;
 					}
+					
+					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
+						printf("BAKA");
+					}
+					displayGrid(tableau, window, renderer);
+				}
+				
+				if (event.button.button == SDL_BUTTON_RIGHT) {
+					placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 					displayGrid(tableau, window, renderer);
 				}
 				
@@ -122,44 +135,80 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 					Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
 				break;
 
-			case 5:
-				Tile = SDL_LoadBMP("img/egg1.bmp");
+			case FLAG:
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/flagfonce.bmp");
+				else 
+					Tile = SDL_LoadBMP("img/flag.bmp");
+				break;
+
+			case FLAG_BOMB:
+				Tile = SDL_LoadBMP("img/flag.bmp");
 				break;
 
 			case 6:
-				Tile = SDL_LoadBMP("img/egg2.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf1clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf1fonce.bmp");
 				break;
 
 			case 7:
-				Tile = SDL_LoadBMP("img/egg3.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf2clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf2fonce.bmp");
 				break;
 
 			case 8:
-				Tile = SDL_LoadBMP("img/egg4.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf3clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf3fonce.bmp");
 				break;
 
 			case 9:
-				Tile = SDL_LoadBMP("img/egg5.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf4clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf4fonce.bmp");
 				break;
 
 			case 10:
-				Tile = SDL_LoadBMP("img/egg6.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf5clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf5fonce.bmp");
 				break;
 
 			case 11:
-				Tile = SDL_LoadBMP("img/egg7.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf6clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf6fonce.bmp");
 				break;
 
 			case 12:
-				Tile = SDL_LoadBMP("img/egg8.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf7clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf7fonce.bmp");
 				break;
 
 			case 13:
-				Tile = SDL_LoadBMP("img/Bombe.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/oeuf8clair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/oeuf8fonce.bmp");
 				break;
 
-			case FLAG:
+			case 14:
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/bombeclair.bmp");
+				else
+					Tile = SDL_LoadBMP("img/bombefonce.bmp");
 				break;
+
 			default:
 				Tile = SDL_LoadBMP("img/NumberTwo.bmp");
 				break;
@@ -195,8 +244,34 @@ void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 }
 
 
-int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+{
+	switch (tableau[y][x])
 	{
+	case BOMB_CELL:
+		tableau[y][x] = FLAG_BOMB;
+		break;
+
+	case HIDDEN_CELL:
+		tableau[y][x] = FLAG;
+		break;
+
+	case FLAG:
+		tableau[y][x] = HIDDEN_CELL;
+		break;
+
+	case FLAG_BOMB:
+		tableau[y][x] = BOMB_CELL;
+		break;
+
+	default:
+		tableau[y][x] = HIDDEN_CELL;
+		break;
+	}
+}
+
+int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+{
 
 	int bombs = bombsAround(tableau, x, y);
 
@@ -204,7 +279,7 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 		for (int i = 0; i < GRID_LENGTH; i++) {
 			for (int j = 0; j < GRID_LENGTH; j++) {
 				if (tableau[i][j] == BOMB_CELL)
-					tableau[i][j] = 13;
+					tableau[i][j] = 14;
 			}
 		}
 		return 3;
@@ -212,7 +287,7 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 
 	if (bombs != 0)
 	{
-		tableau[y][x] = bombs + 4;
+		tableau[y][x] = bombs + 5;
 		return 1;
 	}
 
@@ -227,6 +302,7 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 			}
 		}
 	}
+	return 0;
 }
 
 int bombsAround(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
@@ -283,7 +359,6 @@ int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startP
 			}
 		}
 	}
-
 
 	for (i = 0; i < BOMB_NUMBER; i++)
 	{

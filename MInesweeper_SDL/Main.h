@@ -10,6 +10,7 @@ int bombsAround(char tableau[GRID_LENGTH][GRID_LENGTH], int x, int y);
 int victory(char tableau[GRID_LENGTH][GRID_LENGTH]);
 void Color(int couleurDuTexte, int couleurDeFond);
 int bombPlacing(char tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY);
+void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y);
 
 
 #endif 
