@@ -1,5 +1,5 @@
 #include <SDL.h>
-#include <SDL_mixer.h>
+//#include <SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -143,7 +143,10 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 				break;
 
 			case FLAG_BOMB:
-				Tile = SDL_LoadBMP("img/flag.bmp");
+				if ((i + j) % 2 == 0)
+					Tile = SDL_LoadBMP("img/flagfonce.bmp");
+				else
+					Tile = SDL_LoadBMP("img/flag.bmp");
 				break;
 
 			case 6:
@@ -265,7 +268,6 @@ void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 		break;
 
 	default:
-		tableau[y][x] = HIDDEN_CELL;
 		break;
 	}
 }
@@ -274,6 +276,9 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
 
 	int bombs = bombsAround(tableau, x, y);
+
+	if (tableau[y][x] == FLAG || tableau[y][x] == FLAG_BOMB)
+		return 2;
 
 	if (tableau[y][x] == BOMB_CELL) {
 		for (int i = 0; i < GRID_LENGTH; i++) {
@@ -348,22 +353,25 @@ int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startP
 	if (FREE_CASE_COUNT < BOMB_NUMBER)
 		return 1;
 	stArray freeIndex = createTab(FREE_CASE_COUNT);
-	int randomPos, i = 0;
+	int randomPos, i, j = 0;
 
-	for (int i = 0; i < 3; i++)
+	for (i = 3; i > 0; i--)
 	{
-		for (int j = 0; j < 3; j++)
+		for (j = 3; j > 0; j--)
 		{
-			if (startPosX + i - 1 >= 0 && startPosX + i - 1 < GRID_LENGTH && startPosY + j - 1 >= 0 && startPosY < GRID_LENGTH) {
-				removeAt(&freeIndex, (startPosY) * 10 + (j - 1) * 10 + (startPosX) + i - 1);
+			if (startPosX + i - 2 >= 0 && startPosX + i - 2 < GRID_LENGTH && startPosY + j - 2 >= 0 && startPosY + j - 2 < GRID_LENGTH)
+			{
+				//printf("indice [%d]: %d\n", (startPosY + i - 2) * 10 + startPosX + j - 2, freeIndex.point[(startPosY + i - 2) * 10 + startPosX + j - 2]);
+				removeAt(&freeIndex, (startPosY + i - 2) * 10 + startPosX + j - 2);
 			}
+
 		}
 	}
 
 	for (i = 0; i < BOMB_NUMBER; i++)
 	{
 		randomPos = rand() % (freeIndex.size - i - 9);
-		printf("RandomPos : %d    Coordonnes :%d | %d\n", randomPos, freeIndex.point[randomPos] / 10, freeIndex.point[randomPos] % 10);
+		//printf("RandomPos : %d    Coordonnes :%d | %d\n", randomPos ,freeIndex.point[randomPos] / 10, freeIndex.point[randomPos] % 10);
 		tableau[freeIndex.point[randomPos] / 10][freeIndex.point[randomPos] % 10] = BOMB_CELL;
 		removeAt(&freeIndex, randomPos);
 	}
