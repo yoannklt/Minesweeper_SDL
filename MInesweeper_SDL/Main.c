@@ -8,7 +8,7 @@
 #include "Main.h"
 #include "Array.h"
 #define GRID_LENGTH 10
-#define BOMB_NUMBER 14
+#define BOMB_NUMBER 17
 #define HIDDEN_CELL 0
 #define BOMB_CELL 1
 #define DISCOVERED_CELL 2
@@ -20,6 +20,8 @@ int main(int argc, char** argv)
 {
 	SDL_Renderer* renderer = NULL;
 	SDL_Window* window = NULL;
+	SDL_Texture* textures[21];
+
 
 	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
 
@@ -37,9 +39,11 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
+	InitializeTexture(renderer, textures);
+
 	int nbTours = 0;
 
-	displayGrid(tableau, window, renderer);
+	displayGrid(tableau, window, renderer, textures);
 	while (program_launched)
 	{
 		//EVENT
@@ -59,12 +63,12 @@ int main(int argc, char** argv)
 					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
 						printf("BAKA");
 					}
-					displayGrid(tableau, window, renderer);
+					displayGrid(tableau, window, renderer, &textures);
 				}
 				
 				if (event.button.button == SDL_BUTTON_RIGHT) {
 					placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-					displayGrid(tableau, window, renderer);
+					displayGrid(tableau, window, renderer, &textures);
 				}
 				
 				break;
@@ -101,7 +105,7 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer)
+void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture** textures)
 {
 	SDL_RenderClear(renderer);
 	SDL_Texture* texture = NULL;
@@ -112,6 +116,7 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 		rectangle.y = 50 * i;
 		for (int j = 0; j < GRID_LENGTH; j++) {
 			Tile = NULL;
+
 			//printf("%d", i);
 			switch (tableau[i][j]) {
 			case HIDDEN_CELL:
@@ -217,22 +222,10 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 				break;
 			}
 			//------------------------------------//
-			if (Tile == NULL)
-				DestroyWindowAndRenderer(window, renderer);
-
-			texture = SDL_CreateTextureFromSurface(renderer, Tile);
-			SDL_FreeSurface(Tile);
-
-			if (texture == NULL)
-				DestroyWindowAndRenderer(window, renderer);
-
-			if (SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h) != 0)
-				DestroyWindowAndRenderer(window, renderer);
 
 			rectangle.x = 50 * j + 250; // oubli pas le "rectangleTest.y" aussi mon reuf
+			DisplayImage(window, renderer, Tile, texture, rectangle);
 
-			if (SDL_RenderCopy(renderer, texture, NULL, &rectangle) != 0)
-				DestroyWindowAndRenderer(window, renderer);
 		}
 	}
 	SDL_RenderPresent(renderer);
@@ -246,6 +239,65 @@ void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 	SDL_Quit();
 }
 
+void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[20])
+{
+
+	const char* PATH[] =
+	{
+/* 0  */		"img/herbe2.bmp",
+/* 1  */		"img/flag.bmp",
+/* 2  */		"img/herbe-automne2.bmp",
+/* 3  */		"img/oeuf1clair.bmp",
+/* 4  */		"img/oeuf2clair.bmp",
+/* 5  */		"img/oeuf3clair.bmp",
+/* 6  */		"img/oeuf4clair.bmp",
+/* 7  */		"img/oeuf5clair.bmp",
+/* 8  */		"img/oeuf6clair.bmp",
+/* 9  */		"img/oeuf7clair.bmp",
+/* 10 */		"img/oeuf8clair.bmp",
+/* 11 */		"img/bombeclair.bmp",	
+	
+/* 0  */		"img/herbe1.bmp",
+/* 1  */		"img/flagfonce.bmp",
+/* 2  */		"img/herbe-automne1.bmp",
+/* 3  */		"img/oeuf1fonce.bmp",
+/* 4  */		"img/oeuf2fonce.bmp",
+/* 5  */		"img/oeuf3fonce.bmp",
+/* 6  */		"img/oeuf4fonce.bmp",
+/* 7  */		"img/oeuf5fonce.bmp",
+/* 8  */		"img/oeuf6fonce.bmp",
+/* 9  */		"img/oeuf7fonce.bmp",
+/* 10  */		"img/oeuf8fonce.bmp",
+/* 11 */		"img/bombefonce.bmp"
+	};
+
+	//Load de tous les BMP vers des SDLSurface
+	for (int i = 0; i < 21; i++) {
+		SDL_Surface* surface = (i % 2 == 0) ? SDL_LoadBMP(PATH[i]) : SDL_LoadBMP(PATH[12 + i - 11]);
+		textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
+		SDL_FreeSurface(surface);
+	}
+
+}
+
+void DisplayImage(SDL_Window* window, SDL_Renderer* renderer, SDL_Surface* Tile, SDL_Texture* texture, SDL_Rect rectangle)
+{
+	if (Tile == NULL)
+		DestroyWindowAndRenderer(window, renderer);
+
+	texture = SDL_CreateTextureFromSurface(renderer, Tile);
+	SDL_FreeSurface(Tile);
+
+	if (texture == NULL)
+		DestroyWindowAndRenderer(window, renderer);
+
+	if (SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h) != 0)
+		DestroyWindowAndRenderer(window, renderer);
+
+
+	if (SDL_RenderCopy(renderer, texture, NULL, &rectangle) != 0)
+		DestroyWindowAndRenderer(window, renderer);
+}
 
 void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
@@ -280,7 +332,7 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 	if (tableau[y][x] == FLAG || tableau[y][x] == FLAG_BOMB)
 		return 2;
 
-	if (tableau[y][x] == BOMB_CELL) {
+	if (tableau[y][x] == BOMB_CELL || tableau[y][x] == FLAG_BOMB) {
 		for (int i = 0; i < GRID_LENGTH; i++) {
 			for (int j = 0; j < GRID_LENGTH; j++) {
 				if (tableau[i][j] == BOMB_CELL)
@@ -317,7 +369,7 @@ int bombsAround(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			if (i - 1 != 0 || j - 1 != 0) {
-				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && tableau[y + j - 1][x + i - 1] == BOMB_CELL) {
+				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && (tableau[y + j - 1][x + i - 1] == BOMB_CELL || tableau[y + j - 1][x + i - 1] == FLAG_BOMB)) {
 					bombsAround++;
 				}
 			}
