@@ -273,7 +273,7 @@ void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[20])
 
 	//Load de tous les BMP vers des SDLSurface
 	for (int i = 0; i < 21; i++) {
-		SDL_Surface* surface = (i % 2 == 0) ? SDL_LoadBMP(PATH[i]) : SDL_LoadBMP(PATH[12 + i - 11]);
+		SDL_Surface* surface = (i % 2 == 0) ? SDL_LoadBMP(PATH[i]) : SDL_LoadBMP(PATH[i]);
 		textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
 		SDL_FreeSurface(surface);
 	}
