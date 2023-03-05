@@ -1,5 +1,5 @@
 #include <SDL.h>
-//#include <SDL_mixer.h>
+#include <SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -7,6 +7,7 @@
 // FICHIER(S) PRESENT(S) DANS HEADER FILES, CONTIENT LA DECLARATION DE PLUSIEURS FONCTIONS ET/OU STRUCTURES UTILES AU CODE
 #include "Main.h"
 #include "Array.h"
+#define MUSIC_PATH "sounds/musics/Menu_music.wav"
 #define GRID_LENGTH 10
 #define BOMB_NUMBER 17
 #define HIDDEN_CELL 0
@@ -16,20 +17,21 @@
 #define FLAG_BOMB 4
 
 
+
 int main(int argc, char** argv)
 {
 	SDL_Renderer* renderer = NULL;
 	SDL_Window* window = NULL;
-	SDL_Texture* textures[21];
 
+	SDL_Texture* textures[21];
 
 	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
 
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
 		SDL_ExitWithError("Initialisation SDL");
+
 	
-	SDL_bool program_launched = SDL_TRUE;
 	// CREATION DE LA FENETRE WINDOW PUIS VERIFICATION DE L'INITIALISATION
 	window = SDL_CreateWindow("Minesweeper", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 750, 500, 0);
 	if (window == NULL)
@@ -39,11 +41,14 @@ int main(int argc, char** argv)
 	if (renderer == NULL)
 		SDL_ExitWithError("Creation renderer");
 
-	InitializeTexture(renderer, textures);
 
+	InitializeTexture(renderer, textures);
+	SDL_bool program_launched = SDL_TRUE;
 	int nbTours = 0;
 
-	displayGrid(tableau, window, renderer, textures);
+	DisplayMenu(window, renderer);
+
+	//displayGrid(tableau, window, renderer, textures);
 	while (program_launched)
 	{
 		//EVENT
@@ -56,7 +61,7 @@ int main(int argc, char** argv)
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					if (nbTours == 0) {
 						bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-						play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3;
+						play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 						nbTours++;
 					}
 					
@@ -78,7 +83,6 @@ int main(int argc, char** argv)
 				break;
 
 			default:
-				
 				break;
 			}
 		}
@@ -93,6 +97,8 @@ int main(int argc, char** argv)
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
+
+
 	SDL_Quit();
 	return EXIT_SUCCESS; // return 0;
 }
@@ -103,6 +109,41 @@ void SDL_ExitWithError(const char* message)
 	SDL_Log("ERREUR : %s > %s\n", message, SDL_GetError());
 	SDL_Quit();
 	exit(EXIT_FAILURE);
+}
+
+void DisplayMenu(SDL_Window* window, SDL_Renderer* renderer)
+{
+	SDL_RenderClear(renderer);
+	SDL_Texture* texture = NULL;
+	SDL_Surface* Tile = NULL;
+	SDL_Rect rectangle;
+
+	Tile = SDL_LoadBMP("img/difficulty.bmp"); 
+	 
+	if (Tile == NULL)  
+		DestroyWindowAndRenderer(window, renderer); 
+
+	texture = SDL_CreateTextureFromSurface(renderer, Tile); 
+	SDL_FreeSurface(Tile); 
+
+	if (texture == NULL) {
+		DestroyWindowAndRenderer(window, renderer);
+		SDL_ExitWithError("Texture NULL");
+	}
+		 
+
+	if (SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h) != 0) {
+		DestroyWindowAndRenderer(window, renderer); 
+		SDL_ExitWithError("QueryTexture != 0");
+	}
+
+
+	if (SDL_RenderCopy(renderer, texture, NULL, &rectangle) != 0) {
+		DestroyWindowAndRenderer(window, renderer); 
+		SDL_ExitWithError("RenderCopy != 0"); 
+	}
+
+	SDL_RenderPresent(renderer);
 }
 
 void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture** textures)
