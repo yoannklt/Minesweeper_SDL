@@ -7,6 +7,8 @@
 // FICHIER(S) PRESENT(S) DANS HEADER FILES, CONTIENT LA DECLARATION DE PLUSIEURS FONCTIONS ET/OU STRUCTURES UTILES AU CODE
 #include "Main.h"
 #include "Array.h"
+
+#define TEXTURE_COUNT 24
 #define GRID_LENGTH 10
 #define BOMB_NUMBER 17
 #define HIDDEN_CELL 0
@@ -20,7 +22,7 @@ int main(int argc, char** argv)
 {
 	SDL_Renderer* renderer = NULL;
 	SDL_Window* window = NULL;
-	SDL_Texture* textures[21];
+	SDL_Texture* textures[TEXTURE_COUNT];
 
 
 	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
@@ -105,131 +107,88 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture** textures)
+void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT])
 {
 	SDL_RenderClear(renderer);
-	SDL_Texture* texture = NULL;
 	SDL_Surface* Tile = NULL;
 	SDL_Rect rectangle;
+	
 
 	for (int i = 0; i < GRID_LENGTH; i++) {
 		rectangle.y = 50 * i;
 		for (int j = 0; j < GRID_LENGTH; j++) {
 			Tile = NULL;
 
-			//printf("%d", i);
-			switch (tableau[i][j]) {
-			case HIDDEN_CELL:
-				if ((i + j) % 2 == 0) 
-					Tile = SDL_LoadBMP("img/herbe1.bmp");
-				else  
-					Tile = SDL_LoadBMP("img/herbe2.bmp"); 
-				break;
-			
-			case BOMB_CELL:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/herbe1.bmp");
-				else
-					Tile = SDL_LoadBMP("img/herbe2.bmp");
-				break;
+			//------------------------------------//
+			//textures[0] //clair
+			//textures[12] //sombre
+			int factorI = i % 2;
+			int factorJ = ((j + factorI) % 2);
+			int start = factorJ * 12;
 
-			case DISCOVERED_CELL:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/herbe-automne1.bmp");
-				else
-					Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
-				break;
+			switch (tableau[i][j])
+			{
+				case DISCOVERED_CELL:
+					start += 2;
+					break;
 
-			case FLAG:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/flagfonce.bmp");
-				else 
-					Tile = SDL_LoadBMP("img/flag.bmp");
-				break;
+				case BOMB_CELL:
+					break;
 
-			case FLAG_BOMB:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/flagfonce.bmp");
-				else
-					Tile = SDL_LoadBMP("img/flag.bmp");
-				break;
+				case FLAG:
+					start += 1;
+					break;
 
-			case 6:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf1clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf1fonce.bmp");
-				break;
+				case FLAG_BOMB:
+					start += 2;
+					break;
 
-			case 7:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf2clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf2fonce.bmp");
-				break;
+				case 5:
+					start += 3;
+					break;
 
-			case 8:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf3clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf3fonce.bmp");
-				break;
+				case 6:
+					start += 4;
+					break;
 
-			case 9:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf4clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf4fonce.bmp");
-				break;
+				case 7:
+					start += 5;
+					break;
 
-			case 10:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf5clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf5fonce.bmp");
-				break;
+				case 8:
+					start += 6;
+					break;
 
-			case 11:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf6clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf6fonce.bmp");
-				break;
+				case 9:
+					start += 7;
+					break;
 
-			case 12:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf7clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf7fonce.bmp");
-				break;
+				case 10:
+					start += 8;
+					break;
 
-			case 13:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/oeuf8clair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/oeuf8fonce.bmp");
-				break;
+				case 11:
+					start += 9;
+					break;
 
-			case 14:
-				if ((i + j) % 2 == 0)
-					Tile = SDL_LoadBMP("img/bombeclair.bmp");
-				else
-					Tile = SDL_LoadBMP("img/bombefonce.bmp");
-				break;
+				case 12:
+					start += 10;
+					break;
 
-			default:
-				Tile = SDL_LoadBMP("img/NumberTwo.bmp");
-				break;
+				default:
+					
+					break;
 			}
+
 			//------------------------------------//
 
 			rectangle.x = 50 * j + 250; // oubli pas le "rectangleTest.y" aussi mon reuf
-			DisplayImage(window, renderer, Tile, texture, rectangle);
+			DisplayImage(renderer, textures[start], rectangle);
 
 		}
 	}
 	SDL_RenderPresent(renderer);
-	SDL_DestroyTexture(texture);
+	SDL_DestroyTexture(textures);
 }
 
 void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
@@ -239,7 +198,7 @@ void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 	SDL_Quit();
 }
 
-void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[20])
+void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT])
 {
 
 	const char* PATH[] =
@@ -272,31 +231,21 @@ void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[20])
 	};
 
 	//Load de tous les BMP vers des SDLSurface
-	for (int i = 0; i < 21; i++) {
-		SDL_Surface* surface = (i % 2 == 0) ? SDL_LoadBMP(PATH[i]) : SDL_LoadBMP(PATH[i]);
+	for (int i = 0; i < TEXTURE_COUNT; i++) {
+		SDL_Surface* surface = SDL_LoadBMP(PATH[i]);
 		textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
 		SDL_FreeSurface(surface);
 	}
 
 }
 
-void DisplayImage(SDL_Window* window, SDL_Renderer* renderer, SDL_Surface* Tile, SDL_Texture* texture, SDL_Rect rectangle)
+void DisplayImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rectangle)
 {
-	if (Tile == NULL)
-		DestroyWindowAndRenderer(window, renderer);
-
-	texture = SDL_CreateTextureFromSurface(renderer, Tile);
-	SDL_FreeSurface(Tile);
-
-	if (texture == NULL)
-		DestroyWindowAndRenderer(window, renderer);
-
 	if (SDL_QueryTexture(texture, NULL, NULL, &rectangle.w, &rectangle.h) != 0)
-		DestroyWindowAndRenderer(window, renderer);
-
+		SDL_ExitWithError("QueryTexture failed");
 
 	if (SDL_RenderCopy(renderer, texture, NULL, &rectangle) != 0)
-		DestroyWindowAndRenderer(window, renderer);
+		SDL_ExitWithError("RenderCopy failed");
 }
 
 void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
@@ -431,3 +380,107 @@ int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startP
 	free(freeIndex.point);
 	return 0;
 }
+
+//switch (tableau[i][j]) {
+//case HIDDEN_CELL:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/herbe1.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/herbe2.bmp");
+//	break;
+//
+//case BOMB_CELL:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/herbe1.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/herbe2.bmp");
+//	break;
+//
+//case DISCOVERED_CELL:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/herbe-automne1.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
+//	break;
+//
+//case FLAG:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/flagfonce.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/flag.bmp");
+//	break;
+//
+//case FLAG_BOMB:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/flagfonce.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/flag.bmp");
+//	break;
+//
+//case 6:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf1clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf1fonce.bmp");
+//	break;
+//
+//case 7:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf2clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf2fonce.bmp");
+//	break;
+//
+//case 8:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf3clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf3fonce.bmp");
+//	break;
+//
+//case 9:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf4clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf4fonce.bmp");
+//	break;
+//
+//case 10:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf5clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf5fonce.bmp");
+//	break;
+//
+//case 11:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf6clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf6fonce.bmp");
+//	break;
+//
+//case 12:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf7clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf7fonce.bmp");
+//	break;
+//
+//case 13:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/oeuf8clair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/oeuf8fonce.bmp");
+//	break;
+//
+//case 14:
+//	if ((i + j) % 2 == 0)
+//		Tile = SDL_LoadBMP("img/bombeclair.bmp");
+//	else
+//		Tile = SDL_LoadBMP("img/bombefonce.bmp");
+//	break;
+//
+//default:
+//	Tile = SDL_LoadBMP("img/NumberTwo.bmp");
+//	break;
+//}
