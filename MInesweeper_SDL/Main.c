@@ -8,7 +8,8 @@
 #include "Main.h"
 #include "Array.h"
 
-#define TEXTURE_COUNT 24
+#define ANIMATION_DURATION 1000
+#define TEXTURE_COUNT 34
 #define GRID_LENGTH 10
 #define BOMB_NUMBER 17
 #define HIDDEN_CELL 0
@@ -25,7 +26,7 @@ int main(int argc, char** argv)
 	SDL_Texture* textures[TEXTURE_COUNT];
 
 
-	int tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL };
+	Cell tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL, 0.0, 0 };
 
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -44,10 +45,15 @@ int main(int argc, char** argv)
 	InitializeTexture(renderer, textures);
 
 	int nbTours = 0;
+	float deltaTime = 0;
 
-	displayGrid(tableau, window, renderer, textures);
+	int FPSTarget = 60;
+	float deltaTimeTarget = 1000 / (float) FPSTarget;
+
+	displayGrid(tableau, window, renderer, textures, deltaTime);
 	while (program_launched)
 	{
+		int time = SDL_GetTicks();
 		//EVENT
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -62,15 +68,15 @@ int main(int argc, char** argv)
 						nbTours++;
 					}
 					
-					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
+					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) 
 						printf("BAKA");
-					}
-					displayGrid(tableau, window, renderer, &textures);
+					
+					//displayGrid(tableau, window, renderer, &textures, deltaTime);
 				}
 				
 				if (event.button.button == SDL_BUTTON_RIGHT) {
 					placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-					displayGrid(tableau, window, renderer, &textures);
+					//displayGrid(tableau, window, renderer, &textures, deltaTime);
 				}
 				
 				break;
@@ -85,11 +91,17 @@ int main(int argc, char** argv)
 			}
 		}
 
-		//UPDATE
+		//RENDER
+		displayGrid(tableau, window, renderer, &textures, deltaTime);
 
-		//DISPLAY
-		
+		deltaTime = SDL_GetTicks() - time;
 
+		if (deltaTime < deltaTimeTarget) {
+			SDL_Delay(deltaTimeTarget - deltaTime);
+			deltaTime = deltaTimeTarget;
+		}
+		else
+			printf("%f\n", deltaTime);
 	}
 	
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
@@ -107,32 +119,33 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT])
+void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT], float deltaTime)
 {
 	SDL_RenderClear(renderer);
 	SDL_Surface* Tile = NULL;
 	SDL_Rect rectangle;
 	
-
 	for (int i = 0; i < GRID_LENGTH; i++) {
 		rectangle.y = 50 * i;
 		for (int j = 0; j < GRID_LENGTH; j++) {
 			Tile = NULL;
+			float animationElapsedTime = tableau[i][j].animationElapsedTime += deltaTime;
+			int index = (int) ( animationElapsedTime / (ANIMATION_DURATION / 6.0) ) % 6;
 
 			//------------------------------------//
 			//textures[0] //clair
-			//textures[12] //sombre
+			//textures[17] //sombre
 			int factorI = i % 2;
 			int factorJ = ((j + factorI) % 2);
-			int start = factorJ * 12;
+			int start = factorJ * 17;
 
-			switch (tableau[i][j])
+			switch (tableau[i][j].state)
 			{
-				case DISCOVERED_CELL:
-					start += 2;
+				case BOMB_CELL:
 					break;
 
-				case BOMB_CELL:
+				case DISCOVERED_CELL:
+					start += 2;
 					break;
 
 				case FLAG:
@@ -140,39 +153,43 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 					break;
 
 				case FLAG_BOMB:
-					start += 2;
-					break;
-
-				case 5:
-					start += 3;
+					start += 1;
 					break;
 
 				case 6:
-					start += 4;
+					start += 3;
 					break;
 
 				case 7:
-					start += 5;
+					start += 4;
 					break;
 
 				case 8:
-					start += 6;
+					start += 5;
 					break;
 
 				case 9:
-					start += 7;
+					start += 6;
 					break;
 
 				case 10:
-					start += 8;
+					start += 7;
 					break;
 
 				case 11:
-					start += 9;
+					start += 8;
 					break;
 
 				case 12:
+					start += 9;
+					break;
+
+				case 13:
 					start += 10;
+					break;
+
+				case 14:
+					start += 11 + index;
 					break;
 
 				default:
@@ -187,9 +204,43 @@ void displayGrid(int tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_R
 
 		}
 	}
+
 	SDL_RenderPresent(renderer);
 	SDL_DestroyTexture(textures);
 }
+
+//void animateImage(SDL_Renderer* renderer, SDL_Rect rectangle)
+//{
+//	SDL_Texture* textures[12];
+//	SDL_Surface* Tile = NULL;
+//
+//	const char* FILE_PATH[] =
+//	{
+//		/* 11 */		"img/bombe1clair.bmp",
+//		/* 12 */		"img/bombe2clair.bmp",
+//		/* 13 */		"img/bombe3clair.bmp",
+//		/* 14 */		"img/bombe4clair.bmp",
+//		/* 15 */		"img/bombe5clair.bmp",
+//		/* 16 */		"img/bombe6clair.bmp",
+//		/* 11 */		"img/bombe1fonce.bmp",
+//		/* 12 */		"img/bombe2fonce.bmp",
+//		/* 13 */		"img/bombe3fonce.bmp",
+//		/* 14 */		"img/bombe4fonce.bmp",
+//		/* 15 */		"img/bombe5fonce.bmp",
+//		/* 16 */		"img/bombe6fonce.bmp"
+//	};
+//
+//	//Load de tous les BMP vers des SDLSurface
+//	for (int i = 0; i < 12; i++) {
+//		SDL_Surface* surface = SDL_LoadBMP(FILE_PATH[i]);
+//		textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
+//		SDL_FreeSurface(surface);
+//		SDL_Delay(300);
+//		DisplayImage(renderer, textures[i], rectangle);
+//	}
+//
+//
+//}
 
 void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 {
@@ -214,7 +265,12 @@ void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COU
 /* 8  */		"img/oeuf6clair.bmp",
 /* 9  */		"img/oeuf7clair.bmp",
 /* 10 */		"img/oeuf8clair.bmp",
-/* 11 */		"img/bombeclair.bmp",	
+/* 11 */		"img/bombe1clair.bmp",
+/* 12 */		"img/bombe2clair.bmp",
+/* 13 */		"img/bombe3clair.bmp",
+/* 14 */		"img/bombe4clair.bmp",
+/* 15 */		"img/bombe5clair.bmp",
+/* 16 */		"img/bombe6clair.bmp",
 	
 /* 0  */		"img/herbe1.bmp",
 /* 1  */		"img/flagfonce.bmp",
@@ -226,8 +282,13 @@ void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COU
 /* 7  */		"img/oeuf5fonce.bmp",
 /* 8  */		"img/oeuf6fonce.bmp",
 /* 9  */		"img/oeuf7fonce.bmp",
-/* 10  */		"img/oeuf8fonce.bmp",
-/* 11 */		"img/bombefonce.bmp"
+/* 10 */		"img/oeuf8fonce.bmp",
+/* 11 */		"img/bombe1fonce.bmp",
+/* 12 */		"img/bombe2fonce.bmp",
+/* 13 */		"img/bombe3fonce.bmp",
+/* 14 */		"img/bombe4fonce.bmp",
+/* 15 */		"img/bombe5fonce.bmp",
+/* 16 */		"img/bombe6fonce.bmp"
 	};
 
 	//Load de tous les BMP vers des SDLSurface
@@ -248,24 +309,24 @@ void DisplayImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rectang
 		SDL_ExitWithError("RenderCopy failed");
 }
 
-void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+void placeFlag(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
-	switch (tableau[y][x])
+	switch (tableau[y][x].state)
 	{
 	case BOMB_CELL:
-		tableau[y][x] = FLAG_BOMB;
+		tableau[y][x].state = FLAG_BOMB;
 		break;
 
 	case HIDDEN_CELL:
-		tableau[y][x] = FLAG;
+		tableau[y][x].state = FLAG;
 		break;
 
 	case FLAG:
-		tableau[y][x] = HIDDEN_CELL;
+		tableau[y][x].state = HIDDEN_CELL;
 		break;
 
 	case FLAG_BOMB:
-		tableau[y][x] = BOMB_CELL;
+		tableau[y][x].state = BOMB_CELL;
 		break;
 
 	default:
@@ -273,19 +334,19 @@ void placeFlag(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 	}
 }
 
-int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+int play(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
 
 	int bombs = bombsAround(tableau, x, y);
 
-	if (tableau[y][x] == FLAG || tableau[y][x] == FLAG_BOMB)
+	if (tableau[y][x].state == FLAG || tableau[y][x].state == FLAG_BOMB)
 		return 2;
 
-	if (tableau[y][x] == BOMB_CELL || tableau[y][x] == FLAG_BOMB) {
+	if (tableau[y][x].state == BOMB_CELL || tableau[y][x].state == FLAG_BOMB) {
 		for (int i = 0; i < GRID_LENGTH; i++) {
 			for (int j = 0; j < GRID_LENGTH; j++) {
-				if (tableau[i][j] == BOMB_CELL)
-					tableau[i][j] = 14;
+				if (tableau[i][j].state == BOMB_CELL)
+					tableau[i][j].state = 14;
 			}
 		}
 		return 3;
@@ -293,16 +354,16 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 
 	if (bombs != 0)
 	{
-		tableau[y][x] = bombs + 5;
+		tableau[y][x].state = bombs + 5;
 		return 1;
 	}
 
-	tableau[y][x] = DISCOVERED_CELL;
+	tableau[y][x].state = DISCOVERED_CELL;
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			if (i - 1 != 0 || j - 1 != 0) {
-				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && tableau[y + j - 1][x + i - 1] == HIDDEN_CELL) {
+				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && tableau[y + j - 1][x + i - 1].state == HIDDEN_CELL) {
 					play(tableau,x + i - 1,y + j - 1);
 				}
 			}
@@ -311,14 +372,14 @@ int play(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 	return 0;
 }
 
-int bombsAround(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
+int bombsAround(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 {
 	int bombsAround = 0;
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			if (i - 1 != 0 || j - 1 != 0) {
-				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && (tableau[y + j - 1][x + i - 1] == BOMB_CELL || tableau[y + j - 1][x + i - 1] == FLAG_BOMB)) {
+				if ((x + i - 1 >= 0 && x + i - 1 < GRID_LENGTH && y + j - 1 >= 0 && y + j - 1 < GRID_LENGTH) && (tableau[y + j - 1][x + i - 1].state == BOMB_CELL || tableau[y + j - 1][x + i - 1].state == FLAG_BOMB)) {
 					bombsAround++;
 				}
 			}
@@ -329,11 +390,11 @@ int bombsAround(int tableau[GRID_LENGTH][GRID_LENGTH], int x, int y)
 
 }
 
-int victory(int tableau[GRID_LENGTH][GRID_LENGTH])
+int victory(Cell tableau[GRID_LENGTH][GRID_LENGTH])
 {
 	for (int i = 0; i < GRID_LENGTH; i++) {
 		for (int j = 0; j < GRID_LENGTH; j++) {
-			if (tableau[i][j] == HIDDEN_CELL)
+			if (tableau[i][j].state == HIDDEN_CELL)
 				return 1;
 		}
 	}
@@ -347,7 +408,7 @@ void Color(int couleurDuTexte, int couleurDeFond)
 	SetConsoleTextAttribute(H, couleurDeFond * 16 + couleurDuTexte);
 }
 
-int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY)
+int bombPlacing(Cell tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY)
 {
 	srand(time(NULL));
 	const int FREE_CASE_COUNT = (GRID_LENGTH) * (GRID_LENGTH);
@@ -373,7 +434,7 @@ int bombPlacing(int tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startP
 	{
 		randomPos = rand() % (freeIndex.size - i - 9);
 		//printf("RandomPos : %d    Coordonnes :%d | %d\n", randomPos ,freeIndex.point[randomPos] / 10, freeIndex.point[randomPos] % 10);
-		tableau[freeIndex.point[randomPos] / 10][freeIndex.point[randomPos] % 10] = BOMB_CELL;
+		tableau[freeIndex.point[randomPos] / 10][freeIndex.point[randomPos] % 10].state = BOMB_CELL;
 		removeAt(&freeIndex, randomPos);
 	}
 
