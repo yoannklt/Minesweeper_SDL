@@ -20,6 +20,7 @@ int bombPlacing(Cell tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int start
 void placeFlag(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y);
 void DisplayImage(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rectangle);
 void InitializeTexture(SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT]);
+void displayMenu(SDL_Window* window, SDL_Renderer* renderer);
 
 
 #endif 

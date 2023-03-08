@@ -49,8 +49,9 @@ int main(int argc, char** argv)
 
 	int FPSTarget = 60;
 	float deltaTimeTarget = 1000 / (float) FPSTarget;
+	SDL_bool game = SDL_FALSE;
 
-	displayGrid(tableau, window, renderer, textures, deltaTime);
+	displayMenu(window, renderer);
 	while (program_launched)
 	{
 		int time = SDL_GetTicks();
@@ -60,21 +61,31 @@ int main(int argc, char** argv)
 		{
 			switch (event.type)
 			{
+
+			case SDL_MOUSEMOTION:
+				//printf("X: %d  Y: %d\n", event.motion.x, event.motion.y);
+				break;
+
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					if (nbTours == 0) {
+					if (game == SDL_FALSE) {
+						if (event.button.x >= 273 && event.button.y >= 315 || event.button.x <= 473 && event.button.y <= 386)
+							game = SDL_TRUE;
+					}
+					else if (nbTours == 0 && game == SDL_TRUE) {
 						bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-						play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3;
+						if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
+							printf("baka");
+						}
 						nbTours++;
 					}
 					
-					if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) 
-						printf("BAKA");
+					
 					
 					//displayGrid(tableau, window, renderer, &textures, deltaTime);
 				}
 				
-				if (event.button.button == SDL_BUTTON_RIGHT) {
+				if (event.button.button == SDL_BUTTON_RIGHT && game == SDL_TRUE) {
 					placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 					//displayGrid(tableau, window, renderer, &textures, deltaTime);
 				}
@@ -86,13 +97,14 @@ int main(int argc, char** argv)
 				break;
 
 			default:
-				
+				displayMenu(window, renderer);
 				break;
 			}
 		}
 
 		//RENDER
-		displayGrid(tableau, window, renderer, &textures, deltaTime);
+		if (game == SDL_TRUE)
+			displayGrid(tableau, window, renderer, &textures, deltaTime);
 
 		deltaTime = SDL_GetTicks() - time;
 
@@ -105,8 +117,7 @@ int main(int argc, char** argv)
 	}
 	
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
-	SDL_DestroyWindow(window);
-	SDL_DestroyRenderer(renderer);
+	DestroyWindowAndRenderer(window, renderer);
 	SDL_Quit();
 	return EXIT_SUCCESS; // return 0;
 }
@@ -128,7 +139,6 @@ void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_
 	for (int i = 0; i < GRID_LENGTH; i++) {
 		rectangle.y = 50 * i;
 		for (int j = 0; j < GRID_LENGTH; j++) {
-			Tile = NULL;
 			float animationElapsedTime = tableau[i][j].animationElapsedTime += deltaTime;
 			int index = (int) ( animationElapsedTime / (ANIMATION_DURATION / 6.0) ) % 6;
 
@@ -208,6 +218,23 @@ void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_
 	SDL_RenderPresent(renderer);
 	SDL_DestroyTexture(textures);
 }
+
+void displayMenu(SDL_Window* window, SDL_Renderer* renderer)
+{
+	SDL_Texture* texture;
+	SDL_Surface* image = SDL_LoadBMP("img/ecrantitre.bmp");
+	SDL_Rect rectangle;
+	rectangle.x = 0;
+	rectangle.y = 0;
+	rectangle.w = image->w;
+	rectangle.h = image->h;
+
+	texture = SDL_CreateTextureFromSurface(renderer, image);
+
+	DisplayImage(renderer, texture, rectangle);
+	SDL_RenderPresent(renderer);
+}
+
 
 //void animateImage(SDL_Renderer* renderer, SDL_Rect rectangle)
 //{
