@@ -50,8 +50,8 @@ int main(int argc, char** argv)
 	int FPSTarget = 60;
 	float deltaTimeTarget = 1000 / (float) FPSTarget;
 	SDL_bool game = SDL_FALSE;
+	SDL_bool isGameOver = SDL_FALSE;
 
-	displayMenu(window, renderer);
 	while (program_launched)
 	{
 		int time = SDL_GetTicks();
@@ -63,33 +63,36 @@ int main(int argc, char** argv)
 			{
 
 			case SDL_MOUSEMOTION:
-				//printf("X: %d  Y: %d\n", event.motion.x, event.motion.y);
+				// printf("X: %d  Y: %d\n", event.motion.x, event.motion.y);
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					if (game == SDL_FALSE) {
-						if (event.button.x >= 273 && event.button.y >= 315 || event.button.x <= 473 && event.button.y <= 386)
+						if ((event.button.x >= 273 && event.button.y >= 315) && (event.button.x <= 473 && event.button.y <= 386))
 							game = SDL_TRUE;
 					}
-					else if (nbTours == 0 && game == SDL_TRUE) {
-						bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-						if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
-							printf("baka");
+					else if ((event.button.x >= 250 && event.button.y >= 0) && (event.button.x <= 750 && event.button.y <= 500)) {
+						if (nbTours == 0 && game == SDL_TRUE) {
+							bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
+							if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
+								isGameOver = SDL_TRUE;
+								printf("OUAIS");
+							}
+							nbTours++;
 						}
-						nbTours++;
+						else
+							play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 					}
-					
-					
-					
-					//displayGrid(tableau, window, renderer, &textures, deltaTime);
+
 				}
 				
-				if (event.button.button == SDL_BUTTON_RIGHT && game == SDL_TRUE) {
-					placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-					//displayGrid(tableau, window, renderer, &textures, deltaTime);
-				}
+				if (event.button.button == SDL_BUTTON_RIGHT && game == SDL_TRUE)
+						placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 				
+				if (isGameOver == SDL_TRUE)
+					gameOver(window, renderer);
+
 				break;
 
 			case SDL_QUIT:
@@ -97,14 +100,17 @@ int main(int argc, char** argv)
 				break;
 
 			default:
-				displayMenu(window, renderer);
+				
 				break;
 			}
 		}
 
 		//RENDER
-		if (game == SDL_TRUE)
+		if (game == SDL_TRUE) {
 			displayGrid(tableau, window, renderer, &textures, deltaTime);
+		}
+		else displayMenu(window, renderer);
+			
 
 		deltaTime = SDL_GetTicks() - time;
 
@@ -214,13 +220,28 @@ void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_
 
 		}
 	}
-
+	rectangle.x = 0;
+	rectangle.y = 0;
+	displaySideMenu(window, renderer, rectangle);
 	SDL_RenderPresent(renderer);
 	SDL_DestroyTexture(textures);
 }
 
+void displaySideMenu(SDL_Window* window, SDL_Renderer* renderer, SDL_Rect rectangle)
+{
+	SDL_Texture* texture;
+	SDL_Surface* image = SDL_LoadBMP("img/Pannel.bmp");
+
+	texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_FreeSurface(image);
+
+	DisplayImage(renderer, texture, rectangle);
+	SDL_DestroyTexture(texture);
+}
+
 void displayMenu(SDL_Window* window, SDL_Renderer* renderer)
 {
+	SDL_RenderClear(renderer);
 	SDL_Texture* texture;
 	SDL_Surface* image = SDL_LoadBMP("img/ecrantitre.bmp");
 	SDL_Rect rectangle;
@@ -230,44 +251,27 @@ void displayMenu(SDL_Window* window, SDL_Renderer* renderer)
 	rectangle.h = image->h;
 
 	texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_FreeSurface(image);
 
 	DisplayImage(renderer, texture, rectangle);
 	SDL_RenderPresent(renderer);
+	SDL_DestroyTexture(texture);
 }
 
+void gameOver(SDL_Window* window, SDL_Renderer* renderer)
+{
+	SDL_Texture* texture;
+	SDL_Surface* image = SDL_LoadBMP("img/gameover.bmp");
+	SDL_Rect rectangle;
+	rectangle.x = 175;
+	rectangle.y = 50;
 
-//void animateImage(SDL_Renderer* renderer, SDL_Rect rectangle)
-//{
-//	SDL_Texture* textures[12];
-//	SDL_Surface* Tile = NULL;
-//
-//	const char* FILE_PATH[] =
-//	{
-//		/* 11 */		"img/bombe1clair.bmp",
-//		/* 12 */		"img/bombe2clair.bmp",
-//		/* 13 */		"img/bombe3clair.bmp",
-//		/* 14 */		"img/bombe4clair.bmp",
-//		/* 15 */		"img/bombe5clair.bmp",
-//		/* 16 */		"img/bombe6clair.bmp",
-//		/* 11 */		"img/bombe1fonce.bmp",
-//		/* 12 */		"img/bombe2fonce.bmp",
-//		/* 13 */		"img/bombe3fonce.bmp",
-//		/* 14 */		"img/bombe4fonce.bmp",
-//		/* 15 */		"img/bombe5fonce.bmp",
-//		/* 16 */		"img/bombe6fonce.bmp"
-//	};
-//
-//	//Load de tous les BMP vers des SDLSurface
-//	for (int i = 0; i < 12; i++) {
-//		SDL_Surface* surface = SDL_LoadBMP(FILE_PATH[i]);
-//		textures[i] = SDL_CreateTextureFromSurface(renderer, surface);
-//		SDL_FreeSurface(surface);
-//		SDL_Delay(300);
-//		DisplayImage(renderer, textures[i], rectangle);
-//	}
-//
-//
-//}
+	texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_FreeSurface(image);
+
+	DisplayImage(renderer, texture, rectangle);
+	SDL_DestroyTexture(texture);
+}
 
 void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer)
 {
@@ -428,13 +432,6 @@ int victory(Cell tableau[GRID_LENGTH][GRID_LENGTH])
 	return 0;
 }
 
-// FONCTION QUI MET DE LA COULEUR DANS MA VIE
-void Color(int couleurDuTexte, int couleurDeFond)
-{
-	HANDLE H = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(H, couleurDeFond * 16 + couleurDuTexte);
-}
-
 int bombPlacing(Cell tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int startPosY)
 {
 	srand(time(NULL));
@@ -468,107 +465,3 @@ int bombPlacing(Cell tableau[GRID_LENGTH][GRID_LENGTH], int startPosX, int start
 	free(freeIndex.point);
 	return 0;
 }
-
-//switch (tableau[i][j]) {
-//case HIDDEN_CELL:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/herbe1.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/herbe2.bmp");
-//	break;
-//
-//case BOMB_CELL:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/herbe1.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/herbe2.bmp");
-//	break;
-//
-//case DISCOVERED_CELL:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/herbe-automne1.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/herbe-automne2.bmp");
-//	break;
-//
-//case FLAG:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/flagfonce.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/flag.bmp");
-//	break;
-//
-//case FLAG_BOMB:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/flagfonce.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/flag.bmp");
-//	break;
-//
-//case 6:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf1clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf1fonce.bmp");
-//	break;
-//
-//case 7:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf2clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf2fonce.bmp");
-//	break;
-//
-//case 8:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf3clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf3fonce.bmp");
-//	break;
-//
-//case 9:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf4clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf4fonce.bmp");
-//	break;
-//
-//case 10:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf5clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf5fonce.bmp");
-//	break;
-//
-//case 11:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf6clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf6fonce.bmp");
-//	break;
-//
-//case 12:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf7clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf7fonce.bmp");
-//	break;
-//
-//case 13:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/oeuf8clair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/oeuf8fonce.bmp");
-//	break;
-//
-//case 14:
-//	if ((i + j) % 2 == 0)
-//		Tile = SDL_LoadBMP("img/bombeclair.bmp");
-//	else
-//		Tile = SDL_LoadBMP("img/bombefonce.bmp");
-//	break;
-//
-//default:
-//	Tile = SDL_LoadBMP("img/NumberTwo.bmp");
-//	break;
-//}
