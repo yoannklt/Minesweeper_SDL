@@ -11,7 +11,7 @@ typedef struct Cell {
 
 void SDL_ExitWithError(const char* message);
 void DestroyWindowAndRenderer(SDL_Window* window, SDL_Renderer* renderer);
-void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH], SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT], float deltaTime);
+void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH], SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT], float deltaTime, SDL_bool isGameOver);
 int play(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y);
 int bombsAround(Cell tableau[GRID_LENGTH][GRID_LENGTH], int x, int y);
 int victory(Cell tableau[GRID_LENGTH][GRID_LENGTH]);

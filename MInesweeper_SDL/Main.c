@@ -51,6 +51,7 @@ int main(int argc, char** argv)
 	float deltaTimeTarget = 1000 / (float) FPSTarget;
 	SDL_bool game = SDL_FALSE;
 	SDL_bool isGameOver = SDL_FALSE;
+	SDL_bool isGameWin = SDL_FALSE;
 
 	while (program_launched)
 	{
@@ -75,24 +76,28 @@ int main(int argc, char** argv)
 					else if ((event.button.x >= 250 && event.button.y >= 0) && (event.button.x <= 750 && event.button.y <= 500)) {
 						if (nbTours == 0 && game == SDL_TRUE) {
 							bombPlacing(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-							if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3) {
-								isGameOver = SDL_TRUE;
-								printf("OUAIS");
-							}
+							play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
 							nbTours++;
 						}
-						else
-							play(tableau, (event.button.x - 250) / 50, event.button.y / 50);
+						else if (play(tableau, (event.button.x - 250) / 50, event.button.y / 50) == 3 && isGameWin == SDL_FALSE)
+							isGameOver = SDL_TRUE;
+						else if (victory(tableau) == 0)
+							isGameWin = SDL_TRUE;	
+					}
+					else if ((event.button.x >= 67 && event.button.y >= 407) && (event.button.x <= 184 && event.button.y <= 446)) {
+						for (int i = 0; i < GRID_LENGTH; i++)
+							for (int j = 0; j < GRID_LENGTH; j++)
+								tableau[i][j].state = HIDDEN_CELL;
+
+						isGameWin = SDL_FALSE;
+						isGameOver = SDL_FALSE;
+						nbTours = 0;
 					}
 
 				}
 				
 				if (event.button.button == SDL_BUTTON_RIGHT && game == SDL_TRUE)
 						placeFlag(tableau, (event.button.x - 250) / 50, event.button.y / 50);
-				
-				if (isGameOver == SDL_TRUE)
-					gameOver(window, renderer);
-
 				break;
 
 			case SDL_QUIT:
@@ -106,11 +111,10 @@ int main(int argc, char** argv)
 		}
 
 		//RENDER
-		if (game == SDL_TRUE) {
-			displayGrid(tableau, window, renderer, &textures, deltaTime);
+		if (game == SDL_TRUE ) {
+			displayGrid(tableau, window, renderer, &textures, deltaTime, isGameOver, isGameWin);
 		}
 		else displayMenu(window, renderer);
-			
 
 		deltaTime = SDL_GetTicks() - time;
 
@@ -124,8 +128,41 @@ int main(int argc, char** argv)
 	
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
 	DestroyWindowAndRenderer(window, renderer);
+	SDL_DestroyTexture(textures);
 	SDL_Quit();
 	return EXIT_SUCCESS; // return 0;
+}
+
+void gameOver(SDL_Window* window, SDL_Renderer* renderer)
+{
+	SDL_Texture* texture;
+	SDL_Surface* image = SDL_LoadBMP("img/gameover.bmp");
+	SDL_Rect rectangle;
+	rectangle.x = 295;
+	rectangle.y = 150;
+
+	texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_FreeSurface(image);
+
+	DisplayImage(renderer, texture, rectangle);
+	SDL_RenderPresent(renderer);
+	SDL_DestroyTexture(texture);
+}
+
+void gameVictory(SDL_Window* window, SDL_Renderer* renderer)
+{
+	SDL_Texture* texture;
+	SDL_Surface* image = SDL_LoadBMP("img/win.bmp");
+	SDL_Rect rectangle;
+	rectangle.x = 295;
+	rectangle.y = 150;
+
+	texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_FreeSurface(image);
+
+	DisplayImage(renderer, texture, rectangle);
+	SDL_RenderPresent(renderer);
+	SDL_DestroyTexture(texture);
 }
 
 // FONCTION (CREEE MANUELLEMENT) QUI S'OCCUPE DE LA GESTION DES ERREURS DE CREATION/ INITIALISATION
@@ -136,7 +173,7 @@ void SDL_ExitWithError(const char* message)
 	exit(EXIT_FAILURE);
 }
 
-void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT], float deltaTime)
+void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* textures[TEXTURE_COUNT], float deltaTime, SDL_bool isGameOver, SDL_bool isGameWin)
 {
 	SDL_RenderClear(renderer);
 	SDL_Surface* Tile = NULL;
@@ -223,8 +260,13 @@ void displayGrid(Cell tableau[GRID_LENGTH][GRID_LENGTH],SDL_Window* window, SDL_
 	rectangle.x = 0;
 	rectangle.y = 0;
 	displaySideMenu(window, renderer, rectangle);
+
+	if (isGameOver == SDL_TRUE)
+		gameOver(window, renderer);
+	else if (isGameWin == SDL_TRUE)
+		gameVictory(window, renderer);
+
 	SDL_RenderPresent(renderer);
-	SDL_DestroyTexture(textures);
 }
 
 void displaySideMenu(SDL_Window* window, SDL_Renderer* renderer, SDL_Rect rectangle)
@@ -255,21 +297,6 @@ void displayMenu(SDL_Window* window, SDL_Renderer* renderer)
 
 	DisplayImage(renderer, texture, rectangle);
 	SDL_RenderPresent(renderer);
-	SDL_DestroyTexture(texture);
-}
-
-void gameOver(SDL_Window* window, SDL_Renderer* renderer)
-{
-	SDL_Texture* texture;
-	SDL_Surface* image = SDL_LoadBMP("img/gameover.bmp");
-	SDL_Rect rectangle;
-	rectangle.x = 175;
-	rectangle.y = 50;
-
-	texture = SDL_CreateTextureFromSurface(renderer, image);
-	SDL_FreeSurface(image);
-
-	DisplayImage(renderer, texture, rectangle);
 	SDL_DestroyTexture(texture);
 }
 
