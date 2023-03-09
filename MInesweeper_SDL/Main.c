@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_audio.h>
 #include <SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,14 +27,20 @@ int main(int argc, char** argv)
 	SDL_Window* window = NULL;
 	SDL_Texture* textures[TEXTURE_COUNT];
 
-
 	Cell tableau[GRID_LENGTH][GRID_LENGTH] = { HIDDEN_CELL, 0.0, 0 };
-
 	// INITIALISATION VIDEO : PEUT ÊTRE APPELE AVEC D'AUTRES FLAGS (ARGUMENTS) COMME SDL_INIT_AUDIO.
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 		SDL_ExitWithError("Initialisation SDL");
 
-	
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1) //Initialisation de l'API Mixer 
+	{ 
+		printf("%s", Mix_GetError()); 
+	}
+
+	Mix_Music* music; 
+	music = Mix_LoadMUS("musique.mp3"); //Chargement de la musique 
+	Mix_PlayMusic(music, -1); //Jouer infiniment la musique   
+
 	// CREATION DE LA FENETRE WINDOW PUIS VERIFICATION DE L'INITIALISATION
 	window = SDL_CreateWindow("Minesweeper", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 750, 500, 0);
 	if (window == NULL)
@@ -130,6 +137,8 @@ int main(int argc, char** argv)
 	// LIBERATION DE LA MEMOIRE PUIS DESTRUCTION DE LA FENETRES, DES RENDUS ETC
 	DestroyWindowAndRenderer(window, renderer);
 	SDL_DestroyTexture(textures);
+	Mix_FreeMusic(music);
+	Mix_CloseAudio();
 	SDL_Quit();
 	return EXIT_SUCCESS; // return 0;
 }
